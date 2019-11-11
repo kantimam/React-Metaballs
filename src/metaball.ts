@@ -18,22 +18,31 @@ interface OrbConfig {
     moveY?: number;
 }
 
+interface Container {
+    top: number,
+    right: number,
+    bottom: number,
+    left: number
+}
+
 export class Metaball {
     canvasRef: HTMLCanvasElement;
     orbSettings: Array<OrbConfig>;
     orbArray: Array<Orb>;
-    containerObject: object;
+    containerRef: HTMLElement;
     gl: WebGLRenderingContext;
     shaderProgram: WebGLProgram;
     renderLoop: any;
 
     lastContainerWidth: number;
-    lastContainerHeight: number
+    lastContainerHeight: number;
 
-    constructor(canvasRef: HTMLCanvasElement, orbSettings: Array<object>, containerObject?: object) {
+    containIn:Container={top: 0, right: 0, bottom: 0, left: 0};
+
+    constructor(canvasRef: HTMLCanvasElement, orbSettings: Array<object>, containerRef?: HTMLElement) {
         this.canvasRef = canvasRef;
         this.orbSettings = orbSettings;
-        this.containerObject = containerObject ? containerObject : null;
+        this.containerRef = containerRef;
         this.gl = canvasRef.getContext("webgl")
         this.shaderProgram = null;
 
@@ -43,6 +52,22 @@ export class Metaball {
     setCanvasDim() {
         this.canvasRef.width = this.canvasRef.clientWidth;
         this.canvasRef.height = this.canvasRef.clientHeight;
+
+        /* set the area where orbs spawn and bounce around */
+        if(this.containerRef){
+            const {offsetTop, offsetLeft, clientWidth, clientHeight}=this.containerRef;
+            this.containIn.top=offsetTop;
+            this.containIn.right=offsetLeft+clientWidth;
+            this.containIn.bottom=offsetTop+clientHeight;
+            this.containIn.left=offsetLeft;
+        }else{
+            const {clientWidth, clientHeight}=this.canvasRef;
+            this.containIn.top=0;
+            this.containIn.right=clientWidth;
+            this.containIn.bottom=clientHeight;
+            this.containIn.left=0;
+        }
+        
     }
 
     create() {
@@ -57,16 +82,16 @@ export class Metaball {
     }
 
     private createOrbs() {
-        const {width, height}=this.canvasRef;
         this.orbArray=[]
 
+        const {top, right, bottom, left}=this.containIn
         /* if some orbSettings are given use them to create the orbs */
         if(this.orbSettings && this.orbSettings.length>0){
             return this.orbSettings.forEach((orbConfig, index)=>{
                 this.orbArray[index]=new Orb(
                     orbConfig.size || randomInRange(40, 150),
-                    orbConfig.posX ||  randomInRange(0, width), 
-                    orbConfig.posY || randomInRange(0, height),
+                    orbConfig.posX ||  randomInRange(left, right), 
+                    orbConfig.posY || randomInRange(top, bottom),
                     orbConfig.colorR || randomInRange(0, 255), 
                     orbConfig.colorG || randomInRange(0, 255), 
                     orbConfig.colorB || randomInRange(0, 255),
@@ -79,7 +104,7 @@ export class Metaball {
         for (let i = 0; i < this.orbSettings.length; i++) {
             this.orbArray[i]=new Orb(
                 randomInRange(40, 150),
-                randomInRange(0, width), randomInRange(0, height),
+                randomInRange(left, right), randomInRange(top, bottom),
                 randomInRange(0, 255), randomInRange(0, 255), randomInRange(0, 255),
                 randomInRange(1, 5), randomInRange(1, 5) 
             )
@@ -120,7 +145,7 @@ export class Metaball {
     private updateOrbs=()=>{
         for(let i=0; i<this.orbArray.length; i++){
             this.orbArray[i].updatePosition();
-            checkCollisionRect(this.orbArray[i], 0, this.canvasRef.width, this.canvasRef.height, 0);
+            checkCollisionRect(this.orbArray[i], this.containIn.top, this.containIn.right, this.containIn.bottom, this.containIn.left);
         }
     }
 

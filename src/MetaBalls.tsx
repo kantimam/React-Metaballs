@@ -1,6 +1,5 @@
-import React, { useRef, useLayoutEffect } from 'react';
+import React, { useRef, useLayoutEffect, useState } from 'react';
 import { Metaball } from './metaball';
-import PropTypes from 'prop-types';
 
 type propTypes = {
   orbData?: Array<{
@@ -16,15 +15,24 @@ type propTypes = {
     moveX?: number;
     moveY?: number;
   }>,
-  innerContainer?: React.ReactNode
+  innerContainer?:  React.ReactElement
   children?: any
 }
 
 const MetaBalls: React.FC<propTypes> = ({ orbData = [{}, {}], innerContainer, children }) => {
   const containerRef = useRef<HTMLCanvasElement>(null);
+  let innerRef = useRef<HTMLElement>(null);
+
+  const innerCont=React.cloneElement(innerContainer,{ref:innerRef}, null);
 
   useLayoutEffect(() => {
-    const metaball = new Metaball(containerRef.current, orbData)
+    let metaball: Metaball;
+    if (innerContainer) {
+      metaball = new Metaball(containerRef.current, orbData, innerRef.current)
+    }
+    else {
+      metaball = new Metaball(containerRef.current, orbData)
+    }
     metaball.create();
     metaball.render();
     return () => {
@@ -33,11 +41,11 @@ const MetaBalls: React.FC<propTypes> = ({ orbData = [{}, {}], innerContainer, ch
   }, [])
 
   return (
-    <div id="metaballContainer" style={{ width: "100%", height: "100%"}}>
-      <canvas ref={containerRef} style={{ width: "100%", height: "100%", position: "relative" }}/>
-      {innerContainer /* can be used to further contain the orbs while having some of the glow spread over the entire page*/}
+    <div id="metaballContainer" style={{ width: "100%", height: "100%", position: "relative", overflow: "auto"}}>
+      <canvas ref={containerRef} style={{ width: "100%", height: "100%", position: "absolute", left: 0, top: 0 }} />
+      {innerCont}  {/* can be used to further contain the orbs while having some of the glow spread over the entire page*/}
       <section style={{ width: "100%", height: "100%", position: "absolute", left: 0, top: 0 }}>
-        {children /*YOUR FULL PAGE CONTENT GOES HERE*/}
+        {children} { /*YOUR FULL PAGE CONTENT GOES HERE*/}
       </section>
     </div>
 

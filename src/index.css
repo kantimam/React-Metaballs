@@ -3,3 +3,9 @@ html, body, #root{
   height: 100%;
   margin: 0;
 }
+
+#testa{
+  height: 70%;
+  width: 80%;
+  margin: 4rem;
+}

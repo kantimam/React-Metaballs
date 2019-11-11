@@ -4,7 +4,7 @@ import './index.css';
 import MetaBalls from './MetaBalls';
 import * as serviceWorker from './serviceWorker';
 
-ReactDOM.render(<MetaBalls />, document.getElementById('root'));
+ReactDOM.render(<MetaBalls innerContainer={<div id="testa"></div>}/>, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
