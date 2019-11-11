@@ -25,7 +25,7 @@ export class Metaball {
     containerObject: object;
     gl: WebGLRenderingContext;
     shaderProgram: WebGLProgram;
-    renderLoop: number;
+    renderLoop: any;
 
     lastContainerWidth: number;
     lastContainerHeight: number
@@ -126,7 +126,7 @@ export class Metaball {
 
 
 
-    render() {
+    render=()=> {
         let positionLocation = this.gl.getAttribLocation(this.shaderProgram, "a_position");
 
         // Create a buffer to put three 2d clip space points in 
@@ -210,7 +210,8 @@ export class Metaball {
 
 
 
-    destroy() {
+    destroy=()=> {
+        console.log(this)
         cancelAnimationFrame(this.renderLoop);
         this.gl.deleteProgram(this.shaderProgram);
     }
