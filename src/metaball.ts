@@ -56,9 +56,10 @@ export class Metaball {
         /* set the area where orbs spawn and bounce around */
         if(this.containerRef){
             const {offsetTop, offsetLeft, clientWidth, clientHeight}=this.containerRef;
-            this.containIn.top=offsetTop;
+
+            this.containIn.top=this.canvasRef.clientHeight-offsetTop;  // adjust for webgl coordinate system grows bottom to top but the container position starts at top
             this.containIn.right=offsetLeft+clientWidth;
-            this.containIn.bottom=offsetTop+clientHeight;
+            this.containIn.bottom=this.canvasRef.clientHeight-offsetTop-clientHeight;
             this.containIn.left=offsetLeft;
         }else{
             const {clientWidth, clientHeight}=this.canvasRef;
@@ -101,7 +102,7 @@ export class Metaball {
             })
         }
         /* else go full random */
-        for (let i = 0; i < this.orbSettings.length; i++) {
+        for (let i = 0; i < randomInRange(1,8); i++) {
             this.orbArray[i]=new Orb(
                 randomInRange(40, 150),
                 randomInRange(left, right), randomInRange(top, bottom),
