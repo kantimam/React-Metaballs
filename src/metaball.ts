@@ -25,7 +25,10 @@ export class Metaball {
     containerObject: object;
     gl: WebGLRenderingContext;
     shaderProgram: WebGLProgram;
-    renderLoop: number
+    renderLoop: number;
+
+    lastContainerWidth: number;
+    lastContainerHeight: number
 
     constructor(canvasRef: HTMLCanvasElement, orbSettings: Array<object>, containerObject?: object) {
         this.canvasRef = canvasRef;
@@ -33,11 +36,13 @@ export class Metaball {
         this.containerObject = containerObject ? containerObject : null;
         this.gl = canvasRef.getContext("webgl")
         this.shaderProgram = null;
+
+        this.lastContainerWidth=canvasRef.clientWidth;
+        this.lastContainerHeight=canvasRef.clientHeight;
     }
     setCanvasDim() {
         this.canvasRef.width = this.canvasRef.clientWidth;
         this.canvasRef.height = this.canvasRef.clientHeight;
-
     }
 
     create() {
@@ -46,7 +51,7 @@ export class Metaball {
 
         this.createOrbs();
 
-        console.log(this.orbArray)
+        /* change fragment shaderstring with calculated arraysize */
         const fragWithDynamicLength = this.setDynamicLength(frag, this.orbSettings.length);
         this.shaderProgram = createShaderProgram(this.gl, vert, fragWithDynamicLength);
     }
@@ -85,6 +90,18 @@ export class Metaball {
         const dataLengthSet = shaderString.replace(/<DYNAMIC_LENGTH>/, String(length * 6));
         const arrSizeSet = dataLengthSet.replace(/<ORBCOUNT=0>/, `ORBCOUNT=${length}`);
         return arrSizeSet;
+    }
+
+    private setPositionInBounds=()=>{
+        this.orbArray.forEach(e=>{
+            /* get the relative position with the previos containersize and set it for the new containersize */
+            e.positionX=Math.floor(e.positionX/this.lastContainerWidth * this.canvasRef.clientWidth)
+            e.positionY=Math.floor(e.positionY/this.lastContainerHeight * this.canvasRef.clientHeight)
+        })
+
+        /* update lastContainer size */
+        this.lastContainerWidth=this.canvasRef.clientWidth;
+        this.lastContainerHeight=this.canvasRef.clientHeight;
     }
 
     private u_orbDataFromArray=(orbArray)=>{
@@ -129,9 +146,6 @@ export class Metaball {
         this.gl.useProgram(this.shaderProgram);
 
 
-        // look up time uniform location
-        const uTimeLocation = this.gl.getUniformLocation(this.shaderProgram, "u_time");
-
         // look up resolution uniform location
         const uResolutionLocation = this.gl.getUniformLocation(this.shaderProgram, "u_resolution");
 
@@ -167,11 +181,11 @@ export class Metaball {
         this.gl.clearColor(0, 0, 0, 0);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
-        this.canvasRef.onresize = () => {
+        window.onresize = () => {
             this.setCanvasDim()
 
-
-            /* recoverLostOrbs(orbArray, gl.canvas.width, gl.canvas.height); */
+            /* recover orbs that might be off screen */
+            this.setPositionInBounds()
 
             this.gl.uniform2fv(uResolutionLocation, [this.canvasRef.clientWidth, this.canvasRef.clientHeight]);
             this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
